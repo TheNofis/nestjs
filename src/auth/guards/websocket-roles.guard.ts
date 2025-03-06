@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Reflector } from '@nestjs/core';
-import { ROLES_KEY } from '../decorators/jwt.decorators';
+import { ROLES_KEY } from '../decorators/websocket-jwt.decorators';
 import { Socket } from 'socket.io';
 
 interface IUser {
@@ -18,7 +18,7 @@ interface IUser {
 }
 
 @Injectable()
-export class RolesGuard implements CanActivate {
+export class WebSocketRolesGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly jwtService: JwtService,

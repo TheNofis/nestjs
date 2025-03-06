@@ -14,7 +14,7 @@ import {
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { Roles } from 'src/auth/decorators/jwt.decorators';
+import { Roles } from 'src/auth/decorators/http-jwt.decorators';
 import { ChangePasswordUserDto } from './dto/changepassword-user.dto';
 
 import { RequestUser, RequestWithUser } from './user.interfaces';
@@ -24,6 +24,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import * as path from 'path';
 
+@Roles('user', 'admin')
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -32,7 +33,6 @@ export class UserController {
   // ********** CHANGE PASSWORD *********
   // ************************************
   @Patch('change-password')
-  @Roles('user', 'admin')
   @UsePipes(new ValidationPipe())
   changePassword(
     @Req() @CurrentUser() user: RequestUser,
@@ -45,7 +45,6 @@ export class UserController {
   // *********** CHANGE AVATAR **********
   // ************************************
   @Post('avatar')
-  @Roles('user', 'admin')
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
@@ -78,7 +77,6 @@ export class UserController {
   // ************ GET PROFILE ***********
   // ************************************
   @Get('profile')
-  @Roles('user', 'admin')
   getProfile(@Req() @CurrentUser() user: RequestUser) {
     return this.userService.findOne(user.id, true);
   }

@@ -6,14 +6,15 @@ import {
 } from '@nestjs/websockets';
 import { ChatService } from './chat.service';
 import { SendMessageDto } from './dto/send-message.dto';
-import { Roles } from 'src/chat/decorators/jwt.decorators';
+import { Roles } from 'src/auth/decorators/websocket-jwt.decorators';
 import { UseGuards } from '@nestjs/common';
-import { RolesGuard } from './guards/roles.guard';
+import { WebSocketRolesGuard } from 'src/auth/guards/websocket-roles.guard';
 
 import { Server } from 'socket.io';
 
+@Roles('user', 'admin')
 @WebSocketGateway()
-@UseGuards(RolesGuard)
+@UseGuards(WebSocketRolesGuard)
 export class ChatGateway {
   constructor(private readonly chatService: ChatService) {}
 
@@ -21,13 +22,11 @@ export class ChatGateway {
   server: Server;
 
   @SubscribeMessage('sendMessage')
-  @Roles('user', 'admin')
   sendMessage(@MessageBody() message: SendMessageDto) {
     return this.chatService.sendMessage(message, this.server);
   }
 
   @SubscribeMessage('connectToRoom')
-  @Roles('user', 'admin')
   connectToRoom(@MessageBody() roomId: string, socket: any) {
     return this.chatService.connectToRoom(roomId, socket);
   }

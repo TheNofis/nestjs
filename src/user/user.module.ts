@@ -6,14 +6,14 @@ import { PasswordService } from 'src/auth/password.service';
 import { RedisService } from 'src/databases/redis/redis.service';
 
 import { AuthModule } from 'src/auth/auth.module';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { HttpRolesGuard } from 'src/auth/guards/http-roles.guard';
 import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [AuthModule],
   controllers: [UserController],
   providers: [
-    { provide: APP_GUARD, useClass: RolesGuard },
+    { provide: APP_GUARD, useClass: HttpRolesGuard },
     UserService,
     PasswordService,
     PrismaService,

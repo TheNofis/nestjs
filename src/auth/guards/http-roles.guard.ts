@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Reflector } from '@nestjs/core';
-import { ROLES_KEY } from '../decorators/jwt.decorators';
+import { ROLES_KEY } from '../decorators/http-jwt.decorators';
 
 interface IUser {
   id: string;
@@ -20,7 +20,7 @@ interface IExtendedRequest extends Request {
 }
 
 @Injectable()
-export class RolesGuard implements CanActivate {
+export class HttpRolesGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly jwtService: JwtService,
