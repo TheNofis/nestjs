@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  StreamableFile,
+} from '@nestjs/common';
 
 import { UpdateUserDto } from './dto/update-user.dto';
 
@@ -16,8 +20,8 @@ import { User } from '@prisma/client';
 
 import ResponseModule, { IResponse } from 'src/response.module';
 
-import path from 'path';
-import fs from 'fs';
+import * as path from 'path';
+import * as fs from 'fs';
 
 @Injectable()
 export class UserService {
@@ -63,7 +67,7 @@ export class UserService {
     file: any,
   ): Promise<IResponse> {
     this.responseModule.start();
-    const uploadDir = path.join(__dirname, '..', 'uploads');
+    const uploadDir = path.join(__dirname, '..', 'avatars');
     if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
     const filePath = path.join(uploadDir, file.filename);
     fs.writeFileSync(filePath, file.buffer);

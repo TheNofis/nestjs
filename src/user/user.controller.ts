@@ -45,7 +45,7 @@ export class UserController {
   // *********** CHANGE AVATAR **********
   // ************************************
   @Post('avatar')
-  @Roles('user', 'admin')
+  // @Roles('user', 'admin')
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
