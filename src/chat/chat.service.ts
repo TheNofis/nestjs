@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { SendMessageDto } from './dto/send-message.dto';
 import { PrismaService } from 'src/databases/prisma/prisma.service';
 import { Nullable } from 'src/databases/prisma/prisma.interfaces';
-import { Room, User } from '@prisma/client';
+import { Room } from '@prisma/client';
 
 import {
   ChatActionJoinRoom,
