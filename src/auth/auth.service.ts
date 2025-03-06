@@ -44,6 +44,7 @@ export class AuthService {
 
     const usertoken: string = this.jwtService.sign({
       id: newUser.id,
+      username: newUser.username,
       role: newUser.role,
     });
 
@@ -70,6 +71,7 @@ export class AuthService {
 
     const usertoken: string = this.jwtService.sign({
       id: user.id,
+      username: user.username,
       role: user.role,
     });
     return this.responseModule.success({ token: usertoken });
