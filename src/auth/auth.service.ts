@@ -23,26 +23,23 @@ export class AuthService {
     this.responseModule = new ResponseModule();
   }
 
-  async register(createUserDto: CreateUserDto): Promise<IResponse> {
+  async register(dto: CreateUserDto): Promise<IResponse> {
     this.responseModule.start();
 
     const user: Nullable<User> = await this.prisma.user.findFirst({
       where: {
-        OR: [
-          { email: createUserDto.email },
-          { username: createUserDto.username },
-        ],
+        OR: [{ email: dto.email }, { username: dto.username }],
       },
     });
     if (user !== null) return this.responseModule.error('User already exists');
 
     const generatedPassword: string = await this.passwordService.hashPassword(
-      createUserDto.password,
+      dto.password,
     );
-    createUserDto.password = generatedPassword;
+    dto.password = generatedPassword;
 
     const newUser: User = await this.prisma.user.create({
-      data: createUserDto,
+      data: dto,
     });
 
     const usertoken: string = this.jwtService.sign({
@@ -53,10 +50,10 @@ export class AuthService {
     return this.responseModule.success({ token: usertoken });
   }
 
-  async login(loginUserDto: LoginUserDto): Promise<IResponse> {
+  async login(dto: LoginUserDto): Promise<IResponse> {
     this.responseModule.start();
 
-    const { identifier, password } = loginUserDto;
+    const { identifier, password } = dto;
 
     const user: Nullable<User> = await this.prisma.user.findFirst({
       where: { OR: [{ email: identifier }, { username: identifier }] },

@@ -36,9 +36,9 @@ export class UserController {
   @UsePipes(new ValidationPipe())
   changePassword(
     @Req() @CurrentUser() user: RequestUser,
-    @Body() changePasswordUserDto: ChangePasswordUserDto,
+    @Body() dto: ChangePasswordUserDto,
   ) {
-    return this.userService.changePassword(user, changePasswordUserDto);
+    return this.userService.changePassword(user, dto);
   }
 
   // ************************************
@@ -107,8 +107,8 @@ export class UserController {
   @Patch(':id')
   @Roles('admin')
   @UsePipes(new ValidationPipe())
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(id, updateUserDto);
+  update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
+    return this.userService.update(id, dto);
   }
 
   // ************************************

@@ -33,7 +33,7 @@ export class UserService {
 
   async changePassword(
     @CurrentUser() user: RequestUser,
-    changePasswordUserDto: ChangePasswordUserDto,
+    dto: ChangePasswordUserDto,
   ): Promise<IResponse> {
     this.responseModule.start();
     const dbUser: Nullable<User> = await this.prisma.user.findFirst({
@@ -42,7 +42,7 @@ export class UserService {
     if (dbUser === null) return this.responseModule.error('User not found');
 
     const isMatch: boolean = await this.passwordService.comparePassword(
-      changePasswordUserDto.oldPassword,
+      dto.oldPassword,
       dbUser?.password || '',
     );
 
@@ -51,9 +51,7 @@ export class UserService {
     const updatedUser: User = await this.prisma.user.update({
       where: { id: user.id },
       data: {
-        password: await this.passwordService.hashPassword(
-          changePasswordUserDto.newPassword,
-        ),
+        password: await this.passwordService.hashPassword(dto.newPassword),
       },
     });
 
@@ -95,15 +93,15 @@ export class UserService {
     return this.responseModule.success(userWithoutPassword);
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<IResponse> {
+  async update(id: string, dto: UpdateUserDto): Promise<IResponse> {
     this.responseModule.start();
     const newPassword: string = await this.passwordService.hashPassword(
-      updateUserDto.password,
+      dto.password,
     );
 
     const updatedUser: User = await this.prisma.user.update({
       where: { id },
-      data: { ...updateUserDto, password: newPassword },
+      data: { ...dto, password: newPassword },
     });
     await this.redisService.delete(`user:${id}`);
 

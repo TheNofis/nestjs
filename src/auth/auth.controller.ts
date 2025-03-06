@@ -16,13 +16,13 @@ export class AuthController {
 
   @Post('register')
   @UsePipes(new ValidationPipe())
-  register(@Body() createUserDto: CreateUserDto) {
-    return this.authService.register(createUserDto);
+  register(@Body() dto: CreateUserDto) {
+    return this.authService.register(dto);
   }
 
   @Post('login')
   @UsePipes(new ValidationPipe())
-  login(@Body() loginUserDto: LoginUserDto) {
-    return this.authService.login(loginUserDto);
+  login(@Body() dto: LoginUserDto) {
+    return this.authService.login(dto);
   }
 }
