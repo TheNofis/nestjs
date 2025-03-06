@@ -17,16 +17,22 @@ import { ConnectRoomDto } from './dto/connect-room.dto';
 import ResponseModule from 'src/response.module';
 
 import { UserWithRooms } from 'src/databases/prisma/prisma.interfaces';
+import { RedisService } from 'src/databases/redis/redis.service';
+
+import { Socket } from 'socket.io';
 
 @Injectable()
 export class ChatService {
   private responseModule: ResponseModule;
 
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redisService: RedisService,
+  ) {
     this.responseModule = new ResponseModule();
   }
 
-  async handleConnection(client: SocketWithUser) {
+  async handleConnection(client: Socket) {
     const header: SocketWithUser['handshake']['headers'] =
       client.handshake.headers;
     if (!header.authorization) return;
@@ -35,10 +41,14 @@ export class ChatService {
       atob(header.authorization.split(' ')[1].split('.')[1]),
     ).id;
 
-    const user: Nullable<UserWithRooms> = await this.prisma.user.findUnique({
-      where: { id: userId },
-      include: { rooms: true },
-    });
+    const user: Nullable<UserWithRooms> = await this.redisService.getCachedData(
+      `user-rooms:${userId}`,
+      async () =>
+        await this.prisma.user.findFirst({
+          where: { id: userId },
+          include: { rooms: true },
+        }),
+    );
     if (user === null || user.rooms.length < 1) return;
 
     user.rooms.forEach((room: Room) => {
@@ -86,10 +96,15 @@ export class ChatService {
     if (!dto.roomId) return;
     this.responseModule.start();
 
-    const user: Nullable<UserWithRooms> = await this.prisma.user.findFirst({
-      where: { id: client.user.id },
-      include: { rooms: true },
-    });
+    const user: Nullable<UserWithRooms> = await this.redisService.getCachedData(
+      `user-rooms:${client.user.id}`,
+      async () =>
+        await this.prisma.user.findFirst({
+          where: { id: client.user.id },
+          include: { rooms: true },
+        }),
+    );
+
     if (user === null)
       return client.emit('error', this.responseModule.error('User not found'));
 
@@ -120,10 +135,14 @@ export class ChatService {
     if (!dto.roomId) return;
     this.responseModule.start();
 
-    const user: Nullable<UserWithRooms> = await this.prisma.user.findFirst({
-      where: { id: client.user.id },
-      include: { rooms: true },
-    });
+    const user: Nullable<UserWithRooms> = await this.redisService.getCachedData(
+      `user-rooms:${client.user.id}`,
+      async () =>
+        await this.prisma.user.findFirst({
+          where: { id: client.user.id },
+          include: { rooms: true },
+        }),
+    );
 
     if (!this.UserInRoom(user, dto.roomId))
       return client.emit(
