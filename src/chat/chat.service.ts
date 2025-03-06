@@ -86,7 +86,7 @@ export class ChatService {
 
   async createRoom(dto: CreateRoomDto, client: SocketWithUser) {
     if (!dto.roomName) return;
-    const room = await this.prisma.room.create({
+    const room: Room = await this.prisma.room.create({
       data: { name: dto.roomName },
     });
     client.emit('createdRoom', room.id);
