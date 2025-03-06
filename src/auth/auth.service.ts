@@ -1,13 +1,11 @@
-import {
-  BadRequestException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 
-import { PrismaService } from 'src/prisma.service';
+import { PrismaService } from 'src/databases/prisma/prisma.service';
+import { Nullable } from 'src/databases/prisma/prisma.interfaces';
+
 import { PasswordService } from 'src/auth/password.service';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
@@ -28,7 +26,7 @@ export class AuthService {
   async register(createUserDto: CreateUserDto): Promise<IResponse> {
     this.responseModule.start();
 
-    const user: User | null = await this.prisma.user.findFirst({
+    const user: Nullable<User> = await this.prisma.user.findFirst({
       where: {
         OR: [
           { email: createUserDto.email },
@@ -60,7 +58,7 @@ export class AuthService {
 
     const { identifier, password } = loginUserDto;
 
-    const user: User | null = await this.prisma.user.findFirst({
+    const user: Nullable<User> = await this.prisma.user.findFirst({
       where: { OR: [{ email: identifier }, { username: identifier }] },
     });
 

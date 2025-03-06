@@ -2,8 +2,10 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 
 import { UpdateUserDto } from './dto/update-user.dto';
 
-import { PrismaService } from 'src/prisma.service';
-import { RedisService } from 'src/redis.service';
+import { PrismaService } from 'src/databases/prisma/prisma.service';
+import { RedisService } from 'src/databases/redis/redis.service';
+
+import { Nullable } from 'src/databases/prisma/prisma.interfaces';
 
 import { PasswordService } from 'src/auth/password.service';
 import { ChangePasswordUserDto } from './dto/changepassword-user.dto';
@@ -12,7 +14,7 @@ import { RequestUser } from './user.interfaces';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { User } from '@prisma/client';
 
-import ResponseModule, { Status, IResponse } from 'src/response.module';
+import ResponseModule, { IResponse } from 'src/response.module';
 
 import path from 'path';
 import fs from 'fs';
@@ -34,7 +36,7 @@ export class UserService {
     changePasswordUserDto: ChangePasswordUserDto,
   ): Promise<IResponse> {
     this.responseModule.start();
-    const dbUser: User | null = await this.prisma.user.findFirst({
+    const dbUser: Nullable<User> = await this.prisma.user.findFirst({
       where: { id: user.id },
     });
     if (dbUser === null) return this.responseModule.error('User not found');
@@ -73,14 +75,14 @@ export class UserService {
 
   async findAll(): Promise<IResponse> {
     this.responseModule.start();
-    const users = await this.prisma.user.findMany();
+    const users: User[] | [] = await this.prisma.user.findMany();
     return this.responseModule.success(users);
   }
 
   async findOne(id: string, hiddenPassword = false): Promise<IResponse> {
     this.responseModule.start();
 
-    const user: User | null = await this.redisService.getCachedData(
+    const user: Nullable<User> = await this.redisService.getCachedData(
       `user:${id}`,
       async () => await this.prisma.user.findUnique({ where: { id } }),
     );
