@@ -9,8 +9,6 @@ import {
   ValidationPipe,
   Req,
   Post,
-  UseInterceptors,
-  UploadedFile,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -19,10 +17,8 @@ import { ChangePasswordUserDto } from './dto/changepassword-user.dto';
 
 import { RequestUser, RequestWithUser } from './user.interfaces';
 import { CurrentUser } from './decorators/current-user.decorator';
-import { FileInterceptor } from '@nestjs/platform-express';
 
-import { diskStorage } from 'multer';
-import * as path from 'path';
+import { FastifyRequest } from 'fastify';
 
 @Controller('user')
 export class UserController {
@@ -45,33 +41,21 @@ export class UserController {
   // *********** CHANGE AVATAR **********
   // ************************************
   @Post('avatar')
-  // @Roles('user', 'admin')
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: diskStorage({
-        destination: './avatars',
-        filename: (req: RequestWithUser, file, callback) => {
-          const ext = path.extname(file.originalname);
-          callback(null, `avatar-${req.user.id}${ext}`);
-        },
-      }),
-      fileFilter: (req: Request, file, callback) => {
-        const allowedTypes = [
-          'image/jpeg',
-          'image/png',
-          'image/gif',
-          'image/webp',
-        ];
-        if (!allowedTypes.includes(file.mimetype)) {
-          return callback(new Error('Только изображения разрешены'), false);
-        }
-        callback(null, true);
-      },
-      limits: { fileSize: 5 * 1024 * 1024 },
-    }),
-  )
-  uploadImage(@UploadedFile() file: any) {
-    return { message: 'Файл успешно загружен', file };
+  @Roles('user', 'admin')
+  async uploadAvatar(
+    @Req() @CurrentUser() user: RequestUser,
+    @Req() request: FastifyRequest,
+  ) {
+    const data = await request.file();
+    if (!data) return { message: 'File not loaded' };
+    if (
+      !['image/png', 'image/jpeg', 'image/jpg', 'image/webp'].includes(
+        data.mimetype,
+      )
+    )
+      return { message: 'File type not supported' };
+
+    return this.userService.uploadAvatar(user, data);
   }
 
   // ************************************

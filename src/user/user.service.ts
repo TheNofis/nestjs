@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  StreamableFile,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 
 import { UpdateUserDto } from './dto/update-user.dto';
 
@@ -67,12 +63,40 @@ export class UserService {
     file: any,
   ): Promise<IResponse> {
     this.responseModule.start();
-    const uploadDir = path.join(__dirname, '..', 'avatars');
-    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-    const filePath = path.join(uploadDir, file.filename);
-    fs.writeFileSync(filePath, file.buffer);
 
-    return this.responseModule.success({ avatar: filePath });
+    const fileExtension = path.extname(file.filename);
+    file.filename = `avatar-${user.id}${fileExtension}`;
+
+    const uploadDir = path.join(__dirname, '../..', 'avatars');
+
+    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
+    const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+    let fileSize = 0;
+    file.file.on('data', (chunk) => (fileSize += chunk.length));
+
+    return new Promise((resolve, reject) => {
+      const writeStream = fs.createWriteStream(
+        path.join(uploadDir, file.filename),
+      );
+
+      file.file.pipe(writeStream);
+      writeStream.on('error', () => {
+        reject(this.responseModule.error('File upload failed'));
+      });
+      writeStream.on('finish', () => {
+        if (fileSize > MAX_FILE_SIZE) {
+          fs.unlinkSync(path.join(uploadDir, file.filename));
+          reject(this.responseModule.error('File size is too large'));
+        }
+        resolve(this.responseModule.success(file.filename));
+      });
+    })
+      .then((result: IResponse) => result)
+      .catch((error: IResponse) => {
+        return error;
+      });
   }
 
   async findAll(): Promise<IResponse> {
