@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { SendMessageDto } from './dto/send-message.dto';
 import { PrismaService } from 'src/databases/prisma/prisma.service';
 import { Nullable } from 'src/databases/prisma/prisma.interfaces';
-import { Room } from '@prisma/client';
+import { Room, User } from '@prisma/client';
 
 import {
   ChatActionJoinRoom,
@@ -73,7 +73,7 @@ export class ChatService {
     const payload: ChatActionMessage = this.CreatePayload(
       ChatActionType.MESSAGE,
       message.roomId,
-      client,
+      user as UserWithRooms,
       {
         text: message.text,
       },
@@ -114,15 +114,21 @@ export class ChatService {
         this.responseModule.error('User already in room'),
       );
 
-    await this.prisma.user.update({
+    const updatedUser: UserWithRooms = await this.prisma.user.update({
       where: { id: client.user.id },
       data: { rooms: { connect: { id: dto.roomId } } },
+      include: { rooms: true },
     });
+
+    await this.redisService.set(
+      `user-rooms:${client.user.id}`,
+      JSON.stringify(updatedUser),
+    );
 
     const payload: ChatActionJoinRoom = this.CreatePayload(
       ChatActionType.JOIN_ROOM,
       dto.roomId,
-      client,
+      updatedUser,
     );
 
     client.join(dto.roomId);
@@ -150,15 +156,20 @@ export class ChatService {
         this.responseModule.error('User not in room'),
       );
 
-    await this.prisma.user.update({
+    const updatedUser: UserWithRooms = await this.prisma.user.update({
       where: { id: client.user.id },
       data: { rooms: { disconnect: { id: dto.roomId } } },
+      include: { rooms: true },
     });
+    await this.redisService.set(
+      `user-rooms:${client.user.id}`,
+      JSON.stringify(updatedUser),
+    );
 
     const payload: ChatActionLeaveRoom = this.CreatePayload(
       ChatActionType.LEAVE_ROOM,
       dto.roomId,
-      client,
+      updatedUser,
     );
 
     client
@@ -175,14 +186,15 @@ export class ChatService {
   private CreatePayload<T, V>(
     type: T,
     roomId: string,
-    client: SocketWithUser,
+    user: UserWithRooms,
     content?: V,
   ): IChat<T, V> {
     return {
       author: {
-        id: client.user.id,
-        username: client.user.username,
-        role: client.user.role,
+        id: user.id,
+        username: user.username,
+        avatar: user.avatar,
+        role: user.role,
       },
       action: {
         type,

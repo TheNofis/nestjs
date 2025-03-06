@@ -12,6 +12,7 @@ export interface IChat<T = ChatActionType, V = object> {
   author: {
     id: string;
     username: string;
+    avatar: string;
     role: string;
   };
   action: {
