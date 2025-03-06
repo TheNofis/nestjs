@@ -24,7 +24,6 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import * as path from 'path';
 
-@Roles('user', 'admin')
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -33,6 +32,7 @@ export class UserController {
   // ********** CHANGE PASSWORD *********
   // ************************************
   @Patch('change-password')
+  @Roles('user', 'admin')
   @UsePipes(new ValidationPipe())
   changePassword(
     @Req() @CurrentUser() user: RequestUser,
@@ -45,6 +45,7 @@ export class UserController {
   // *********** CHANGE AVATAR **********
   // ************************************
   @Post('avatar')
+  @Roles('user', 'admin')
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
@@ -77,7 +78,8 @@ export class UserController {
   // ************ GET PROFILE ***********
   // ************************************
   @Get('profile')
-  getProfile(@Req() @CurrentUser() user: RequestUser) {
+  @Roles('user', 'admin')
+  getProfile(@Req() @CurrentUser() user: RequestUser, @Req() req: Request) {
     return this.userService.findOne(user.id, true);
   }
 
