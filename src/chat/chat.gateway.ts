@@ -3,6 +3,8 @@ import {
   SubscribeMessage,
   MessageBody,
   WebSocketServer,
+  ConnectedSocket,
+  OnGatewayConnection,
 } from '@nestjs/websockets';
 import { ChatService } from './chat.service';
 import { SendMessageDto } from './dto/send-message.dto';
@@ -12,22 +14,56 @@ import { WebSocketRolesGuard } from 'src/auth/guards/websocket-roles.guard';
 
 import { Server } from 'socket.io';
 
-@Roles('user', 'admin')
+import { SocketWithUser } from './chat.interfaces';
+import { CreateRoomDto } from './dto/create-room.dto';
+import { ConnectRoomDto } from './dto/connect-room.dto';
+
 @WebSocketGateway()
 @UseGuards(WebSocketRolesGuard)
-export class ChatGateway {
+export class ChatGateway implements OnGatewayConnection {
   constructor(private readonly chatService: ChatService) {}
 
   @WebSocketServer()
   server: Server;
 
-  @SubscribeMessage('sendMessage')
-  sendMessage(@MessageBody() message: SendMessageDto) {
-    return this.chatService.sendMessage(message, this.server);
+  @Roles('user', 'admin')
+  handleConnection(client: SocketWithUser) {
+    return this.chatService.handleConnection(client);
   }
 
+  @Roles('user', 'admin')
+  @SubscribeMessage('sendMessage')
+  sendMessage(
+    @ConnectedSocket() client: SocketWithUser,
+    @MessageBody() message: SendMessageDto,
+  ) {
+    return this.chatService.sendMessage(client, message);
+  }
+
+  @Roles('user', 'admin')
+  @SubscribeMessage('createRoom')
+  createRoom(
+    @ConnectedSocket() client: SocketWithUser,
+    @MessageBody() dto: CreateRoomDto,
+  ) {
+    return this.chatService.createRoom(dto, client);
+  }
+
+  @Roles('user', 'admin')
   @SubscribeMessage('connectToRoom')
-  connectToRoom(@MessageBody() roomId: string, socket: any) {
-    return this.chatService.connectToRoom(roomId, socket);
+  connectToRoom(
+    @ConnectedSocket() client: SocketWithUser,
+    @MessageBody() dto: ConnectRoomDto,
+  ) {
+    return this.chatService.connectToRoom(dto, client);
+  }
+
+  @Roles('user', 'admin')
+  @SubscribeMessage('disconnectFromRoom')
+  disconnectFromRoom(
+    @ConnectedSocket() client: SocketWithUser,
+    @MessageBody() dto: ConnectRoomDto,
+  ) {
+    return this.chatService.disconnectFromRoom(dto, client);
   }
 }
