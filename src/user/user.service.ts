@@ -104,7 +104,7 @@ export class UserService {
       data: { ...dto, password: newPassword },
     });
 
-    await this.redisService.set(`user:${id}`, updatedUser);
+    await this.redisService.set(`user:${id}`, JSON.stringify(updatedUser));
 
     return this.responseModule.success(updatedUser);
   }

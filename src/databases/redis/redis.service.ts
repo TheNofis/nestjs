@@ -21,9 +21,9 @@ export class RedisService {
     return this.redisClient.get(key);
   }
 
-  async set(
+  async set<T>(
     key: string,
-    value: any,
+    value: string,
     expiresIn: number = DEFAULT_CACHE_TIME,
   ): Promise<void> {
     await this.redisClient.set(key, value, { EX: expiresIn });
