@@ -16,7 +16,7 @@ export interface IChat<T = ChatActionType, V = object> {
   };
   action: {
     type: T;
-    content: V;
+    content?: V;
   };
   room: {
     id: string;

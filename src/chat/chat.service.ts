@@ -157,9 +157,9 @@ export class ChatService {
     type: T,
     roomId: string,
     client: SocketWithUser,
-    content: V = {} as V,
+    content?: V,
   ): IChat<T, V> {
-    const payload: IChat<T, V> = {
+    return {
       author: {
         id: client.user.id,
         username: client.user.username,
@@ -173,7 +173,5 @@ export class ChatService {
         id: roomId,
       },
     };
-
-    return payload;
   }
 }
