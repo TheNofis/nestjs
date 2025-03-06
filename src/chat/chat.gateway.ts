@@ -12,7 +12,7 @@ import { Roles } from 'src/auth/decorators/websocket-jwt.decorators';
 import { UseGuards } from '@nestjs/common';
 import { WebSocketRolesGuard } from 'src/auth/guards/websocket-roles.guard';
 
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 
 import { SocketWithUser } from './chat.interfaces';
 import { CreateRoomDto } from './dto/create-room.dto';
@@ -27,7 +27,7 @@ export class ChatGateway implements OnGatewayConnection {
   server: Server;
 
   @Roles('user', 'admin')
-  handleConnection(client: SocketWithUser) {
+  handleConnection(client: Socket) {
     return this.chatService.handleConnection(client);
   }
 
