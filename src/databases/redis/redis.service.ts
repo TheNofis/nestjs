@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { createClient } from 'redis';
 
+export const DEFAULT_CACHE_TIME = 60 * 5;
+
 @Injectable()
 export class RedisService {
   private redisClient: any;
@@ -21,8 +23,8 @@ export class RedisService {
 
   async set(
     key: string,
-    value: string,
-    expiresIn: number = 3600,
+    value: any,
+    expiresIn: number = DEFAULT_CACHE_TIME,
   ): Promise<void> {
     await this.redisClient.set(key, value, { EX: expiresIn });
   }
@@ -39,7 +41,7 @@ export class RedisService {
   async getCachedData(
     key: string,
     fetchFunction: () => Promise<any>,
-    ex: number = 60 * 5,
+    ex: number = DEFAULT_CACHE_TIME,
   ) {
     const cache = await this.redisClient.get(key);
     if (cache) return JSON.parse(cache);
