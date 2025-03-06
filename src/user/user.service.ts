@@ -103,7 +103,8 @@ export class UserService {
       where: { id },
       data: { ...dto, password: newPassword },
     });
-    await this.redisService.delete(`user:${id}`);
+
+    await this.redisService.set(`user:${id}`, updatedUser);
 
     return this.responseModule.success(updatedUser);
   }
